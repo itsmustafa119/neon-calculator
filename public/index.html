@@ -1,40 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Glass Calculator</title>
+    <title>Neon & H. Glass Calculator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Ionicons for History/Theme Icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
-<body>
+
+<body class="dark-mode">
     <div class="background-shapes">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
         <div class="shape shape-3"></div>
     </div>
-    
+
+    <!-- Controls (Theme Toggle & History) -->
+    <div class="app-controls">
+        <button id="theme-toggle" class="control-btn" aria-label="Toggle Theme">
+            <ion-icon name="sunny-outline" class="sun-icon"></ion-icon>
+            <ion-icon name="moon-outline" class="moon-icon"></ion-icon>
+        </button>
+        <button id="history-toggle" class="control-btn" aria-label="View History">
+            <ion-icon name="time-outline"></ion-icon>
+        </button>
+    </div>
+
+    <!-- Main Calculator -->
     <div class="calculator">
         <div class="display">
             <div class="previous-operand" data-previous-operand></div>
             <div class="current-operand" data-current-operand>0</div>
         </div>
         <div class="buttons-grid">
-            <button class="span-two function" data-all-clear>AC</button>
+            <!-- Functions Row 1 -->
+            <button class="function-science" data-operation="sin()">sin</button>
+            <button class="function-science" data-operation="cos()">cos</button>
+            <button class="function-science" data-operation="tan()">tan</button>
+            <button class="function-science" data-operation="sqrt()">√</button>
+
+            <!-- Functions Row 2 -->
+            <button class="function-science" data-operation="^">^</button>
+            <button class="function-science" data-operation="(">(</button>
+            <button class="function-science" data-operation=")">)</button>
+            <button class="function" data-all-clear>AC</button>
+
+            <!-- Numpad + Basic Ops -->
             <button class="function" data-delete>DEL</button>
-            <button class="operator" data-operation="÷">÷</button>
+            <button class="operator" data-operation="/">÷</button>
             <button data-number>7</button>
             <button data-number>8</button>
+
             <button data-number>9</button>
-            <button class="operator" data-operation="×">×</button>
+            <button class="operator" data-operation="*">×</button>
             <button data-number>4</button>
             <button data-number>5</button>
+
             <button data-number>6</button>
             <button class="operator" data-operation="-">-</button>
             <button data-number>1</button>
             <button data-number>2</button>
+
             <button data-number>3</button>
             <button class="operator" data-operation="+">+</button>
             <button class="span-two" data-number>.</button>
@@ -43,6 +75,20 @@
         </div>
     </div>
 
+    <!-- History Panel -->
+    <div class="history-panel" id="history-panel">
+        <div class="history-header">
+            <h2>History</h2>
+            <button id="close-history" class="close-btn"><ion-icon name="close-outline"></ion-icon></button>
+        </div>
+        <div class="history-list" id="history-list">
+            <!-- History Items will be injected here -->
+            <div class="empty-state">No calculations yet</div>
+        </div>
+        <button id="clear-history" class="clear-history-btn">Clear History</button>
+    </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>
