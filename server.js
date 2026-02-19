@@ -49,6 +49,30 @@ app.post('/api/calculate', (req, res) => {
     }
 });
 
+// Graph Plotting Endpoint
+app.post('/api/plot', (req, res) => {
+    const { expression, xRange, step } = req.body;
+    let points = [];
+    
+    if (!expression || !xRange) return res.status(400).json({error: 'Invalid request'});
+    
+    try {
+        const compiled = math.compile(expression);
+        
+        for (let x = xRange[0]; x <= xRange[1]; x += step) {
+            try {
+                let y = compiled.evaluate({x: x});
+                points.push({x, y});
+            } catch (e) {
+                // ignore points outside domain
+            }
+        }
+        res.json({ points });
+    } catch (e) {
+        res.status(400).json({ error: 'Plot error' });
+    }
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
