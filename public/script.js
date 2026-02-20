@@ -233,9 +233,29 @@ function processVoiceInput(text) {
 
 // --- Graphing Logic ---
 let myChart = null;
+
+// Full Screen Toggle
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+fullscreenBtn.addEventListener('click', () => {
+    const viewGraph = document.getElementById('view-graph');
+    viewGraph.classList.toggle('fullscreen');
+    
+    const icon = fullscreenBtn.querySelector('ion-icon');
+    if(viewGraph.classList.contains('fullscreen')) {
+        icon.setAttribute('name', 'contract-outline');
+    } else {
+        icon.setAttribute('name', 'expand-outline');
+    }
+});
+
 function initGraph() {
     const ctx = document.getElementById('graphCanvas').getContext('2d');
     if (myChart) return; 
+
+    // Gradient Fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
 
     myChart = new Chart(ctx, {
         type: 'line',
@@ -244,18 +264,34 @@ function initGraph() {
                 label: 'f(x)',
                 data: [],
                 borderColor: '#3b82f6',
-                borderWidth: 2,
+                backgroundColor: gradient,
+                borderWidth: 3,
                 pointRadius: 0,
-                fill: false,
+                pointHoverRadius: 6,
+                fill: true,
                 tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
             scales: {
-                x: { type: 'linear', position: 'center' },
-                y: { type: 'linear', position: 'center', reverse: false }
+                x: { 
+                    type: 'linear', 
+                    position: 'center',
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                y: { 
+                    type: 'linear', 
+                    position: 'center', 
+                    reverse: false,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
             },
             plugins: {
                 zoom: {

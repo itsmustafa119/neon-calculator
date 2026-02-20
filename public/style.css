@@ -315,6 +315,28 @@ math-field:focus-within {
 }
 
 /* Hide default virtual keyboard toggle if annoying */
-math-field::part(virtual-keyboard-toggle) {
-    display: none;
+/* Full Screen Graph Mode */
+.view-panel.fullscreen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95); /* Opaque for focus */
+    display: flex;
+    flex-direction: column;
 }
+
+.view-panel.fullscreen .canvas-container {
+    flex-grow: 1;
+    height: auto !important; /* Force fill */
+}
+
+.view-panel.fullscreen .graph-controls {
+    max-width: 600px;
+    margin: 20px auto 0 auto;
+    width: 100%;
+}
+

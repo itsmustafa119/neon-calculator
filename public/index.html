@@ -112,7 +112,12 @@
 
             <!-- VIEW: GRAPH -->
             <div id="view-graph" class="view-panel">
-                <canvas id="graphCanvas"></canvas>
+                <div class="graph-header" style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
+                    <button id="fullscreen-btn" class="icon-btn" title="Full Screen"><ion-icon name="expand-outline"></ion-icon></button>
+                </div>
+                <div class="canvas-container" style="position: relative; flex-grow: 1; min-height: 250px;">
+                    <canvas id="graphCanvas"></canvas>
+                </div>
                 <div class="graph-controls">
                     <input type="text" id="graph-input" placeholder="y = x^2">
                     <button id="plot-btn">Plot</button>
