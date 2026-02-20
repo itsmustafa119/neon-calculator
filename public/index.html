@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aether Calc</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <!-- Chart.js & Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script> <!-- Required for Zoom -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 </head>
 <body>
@@ -21,37 +16,44 @@
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
     </div>
-    
-    <!-- Stylish Header -->
-    <header class="app-header">
-        <h1 class="app-title">Aether Calc</h1>
-        <p class="app-subtitle">Precision & Elegance</p>
-    </header>
 
-    <div class="calculator-wrapper">
-        <!-- Controls -->
-        <div class="extra-controls">
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="calc">Calc</button>
-                <button class="tab-btn" data-tab="graph">Graph</button>
-                <button class="tab-btn" data-tab="currency">Currency</button>
-            </div>
-            <div class="action-buttons">
-                <button id="voice-btn" class="voice-btn" title="Voice Control">
+    <!-- Main App Container (Max Width 500px, Centered) -->
+    <div class="app-container">
+        
+        <!-- Header / Action Bar -->
+        <header class="app-header">
+            <div class="app-title">Aether</div>
+            <div class="action-bar">
+                <button id="voice-btn" class="icon-btn" title="Voice Control">
                     <ion-icon name="mic-outline"></ion-icon>
                 </button>
-                <button id="speak-toggle" class="voice-btn" title="Text-to-Speech">
+                <button id="speak-toggle" class="icon-btn" title="Text-to-Speech">
                     <ion-icon name="volume-high-outline"></ion-icon>
                 </button>
-                <button id="history-toggle" class="voice-btn" title="History">
+                <button id="history-toggle" class="icon-btn" title="History">
                     <ion-icon name="time-outline"></ion-icon>
                 </button>
             </div>
+        </header>
+
+        <!-- Mode Dock (Tabs) -->
+        <div class="mode-dock">
+            <button class="tab-btn active" data-tab="calc">
+                <ion-icon name="calculator-outline"></ion-icon> Calculator
+            </button>
+            <button class="tab-btn" data-tab="graph">
+                <ion-icon name="pulse-outline"></ion-icon> Graph
+            </button>
+            <button class="tab-btn" data-tab="currency">
+                <ion-icon name="cash-outline"></ion-icon> Currency
+            </button>
         </div>
 
-        <div class="calculator">
-            <!-- Standard Calc View -->
-            <div id="view-calc">
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+            
+            <!-- VIEW: CALCULATOR -->
+            <div id="view-calc" class="view-panel active" style="background: transparent; box-shadow: none; padding: 0; display: flex; flex-direction: column;">
                 <div class="display">
                     <div class="previous-operand" data-previous-operand></div>
                     <div class="current-operand" data-current-operand>0</div>
@@ -93,64 +95,46 @@
                     <button class="function" data-delete>DEL</button>
                     <button class="operator" data-operation="+">+</button>
         
-                    <!-- Row 7: Equals (Spans full width) -->
-                    <button class="equals span-four" data-equals>=</button>
+                    <!-- Row 7: Equals -->
+                    <button class="equals" data-equals>=</button>
                 </div>
             </div>
 
-            <!-- Graph View -->
-            <div id="view-graph" class="graph-view">
+            <!-- VIEW: GRAPH -->
+            <div id="view-graph" class="view-panel">
                 <canvas id="graphCanvas"></canvas>
                 <div class="graph-controls">
-                    <input type="text" id="graph-input" placeholder="e.g. x^2, sin(x)" >
+                    <input type="text" id="graph-input" placeholder="y = x^2">
                     <button id="plot-btn">Plot</button>
                 </div>
-                <!-- Quick Functions -->
-                <div class="quick-funcs">
-                    <button class="quick-btn" onclick="addGraphFunc('sin(x)')">sin</button>
-                    <button class="quick-btn" onclick="addGraphFunc('cos(x)')">cos</button>
-                    <button class="quick-btn" onclick="addGraphFunc('x^2')">x²</button>
-                    <button class="quick-btn" onclick="resetZoom()">Reset Zoom</button>
+                <div style="margin-top: 10px; display: flex; justify-content: center; gap: 5px;">
+                     <button class="function-science" onclick="addGraphFunc('sin(x)')" style="width: auto; padding: 5px 10px;">sin</button>
+                     <button class="function-science" onclick="addGraphFunc('x^2')" style="width: auto; padding: 5px 10px;">x²</button>
+                     <button class="function-science" onclick="resetZoom()" style="width: auto; padding: 5px 10px;">Reset</button>
                 </div>
             </div>
 
-            <!-- Currency View -->
-            <div id="view-currency" class="currency-view">
-                <div class="converter-box">
-                    <h3>Convert Currency</h3>
-                    <div class="input-group">
-                        <input type="number" id="curr-amount" value="1" min="0">
-                        <select id="curr-from">
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="GBP">GBP</option>
-                            <option value="JPY">JPY</option>
-                            <option value="CNY">CNY</option>
-                            <option value="CAD">CAD</option>
-                            <option value="AUD">AUD</option>
-                            <!-- JS will populate more if available -->
-                        </select>
+            <!-- VIEW: CURRENCY -->
+            <div id="view-currency" class="view-panel">
+                <div class="currency-content">
+                    <h3 style="margin-bottom: 20px;">Converter</h3>
+                    
+                    <div class="input-row">
+                        <input type="number" id="curr-amount" value="1">
+                        <select id="curr-from"></select>
+                    </div>
+
+                    <div style="font-size: 1.5rem; margin: 10px 0; color: var(--accent-blue);">
+                        <ion-icon name="arrow-down-outline"></ion-icon>
+                    </div>
+
+                    <div class="input-row">
+                        <input type="text" id="curr-result-val" readonly>
+                        <select id="curr-to"></select>
                     </div>
                     
-                    <div class="swap-icon">
-                        <ion-icon name="swap-vertical-outline" id="swap-curr"></ion-icon>
-                    </div>
-
-                    <div class="input-group">
-                        <input type="text" id="curr-result-val" readonly value="...">
-                        <select id="curr-to">
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="JPY">JPY</option>
-                            <option value="CNY">CNY</option>
-                            <option value="CAD">CAD</option>
-                            <option value="AUD">AUD</option>
-                        </select>
-                    </div>
-
-                    <button id="convert-btn" class="convert-btn">Convert Now</button>
-                    <div id="rate-info" class="rate-info">Rate: ...</div>
+                    <button id="convert-btn" class="equals" style="width: 100%; margin-top: 20px;">Convert</button>
+                    <p id="rate-info" style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;"></p>
                 </div>
             </div>
 
@@ -160,13 +144,13 @@
     <!-- History Panel -->
     <div class="history-panel" id="history-panel">
         <div class="history-header">
-            <h2>History</h2>
-            <button id="close-history" class="close-btn"><ion-icon name="close-outline"></ion-icon></button>
+            <h3>History</h3>
+            <button id="close-history" class="icon-btn"><ion-icon name="close-outline"></ion-icon></button>
         </div>
         <div class="history-list" id="history-list">
-            <div class="empty-state">No calculations yet</div>
+            <div style="text-align: center; color: #aaa; margin-top: 20px;">Empty</div>
         </div>
-        <button id="clear-history" class="clear-history-btn">Clear History</button>
+        <button id="clear-history" style="margin-top: 10px; padding: 10px; border: 1px solid #ccc; background: transparent;">Clear</button>
     </div>
 
     <script src="script.js"></script>
