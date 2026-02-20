@@ -61,15 +61,20 @@ app.post('/api/plot', (req, res) => {
         
         for (let x = xRange[0]; x <= xRange[1]; x += step) {
             try {
-                let y = compiled.evaluate({x: x});
-                points.push({x, y});
+                // Scope includes both x and X to be user-friendly
+                let y = compiled.evaluate({x: x, X: x});
+                // Ensure y is a real number
+                if (typeof y === 'number' && !isNaN(y) && isFinite(y)) {
+                    points.push({x, y});
+                }
             } catch (e) {
-                // ignore points outside domain
+                // ignore
             }
         }
         res.json({ points });
     } catch (e) {
-        res.status(400).json({ error: 'Plot error' });
+        console.error("Plot error:", e.message);
+        res.status(400).json({ error: 'Invalid expression', details: e.message });
     }
 });
 

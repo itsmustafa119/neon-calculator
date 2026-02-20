@@ -320,38 +320,32 @@ document.getElementById('plot-btn').addEventListener('click', async () => {
     let expr = document.getElementById('graph-input').value; 
     if (!expr) return;
 
-    // SANITIZE: Remove "y =" or "f(x) =" so backend just gets "x^2"
-    expr = expr.replace(/^[a-zA-Z0-9_]+\s*\([^)]*\)\s*=\s*/, '') // f(x)=
-               .replace(/^[a-zA-Z]\s*=\s*/, ''); // y=
+    // SANITIZE
+    expr = expr.replace(/^[a-zA-Z0-9_]+\s*\([^)]*\)\s*=\s*/, '') 
+               .replace(/^[a-zA-Z]\s*=\s*/, ''); 
+
+    console.log("Plotting:", expr); 
 
     try {
         const response = await fetch('/api/plot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ expression: expr, xRange: [-20, 20], step: 0.2 }) 
+            body: JSON.stringify({ expression: expr, xRange: [-50, 50], step: 0.5 }) 
         });
         const data = await response.json();
         
         if (data.points && data.points.length > 0) {
-            // Sort by x just in case
-            // Chart.js line chart expects labels to be X axis.
-            // Scatter might be better but line works if labels are sorted x's
-            
-            // To make chart pan-able smoothly, usually scatter is better, 
-            // but for 'line' type with category/linear axis:
-            // We are using 'type: linear' for x axis, so we provide {x, y} objects data.
-            // Wait, previous code map p.x to labels. 
-            // For linear scale X, we should pass {x,y} to data, not use labels array.
-            
             myChart.data.datasets[0].data = data.points.map(p => ({ x: p.x, y: p.y }));
-            // Clear labels if using linear x axis
-            myChart.data.labels = undefined; 
-            
+            myChart.data.labels = []; // Safe clear
             myChart.update();
         } else {
-            console.log("No points returned or error");
+            console.error("Plot failed/Empty:", data);
+            alert("Invalid function or outside range. Try 'x^2'.");
         }
-    } catch (e) { console.error("Graph error", e); }
+    } catch (e) { 
+        console.error("Graph fetch error", e);
+        alert("Connection error.");
+    }
 });
 
 // --- Currency Logic ---
