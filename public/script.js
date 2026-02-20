@@ -1,150 +1,88 @@
+
+// MathLive Bridge
+const mf = document.getElementById('math-display');
+
+// Helper to execute commands on the math field
+window.execCmd = (cmd, arg) => {
+    mf.focus();
+    if (arg) mf.executeCommand([cmd, arg]);
+    else mf.executeCommand(cmd);
+};
+
 class Calculator {
-    constructor(previousOperandTextElement, currentOperandTextElement) {
-        this.previousOperandTextElement = previousOperandTextElement;
-        this.currentOperandTextElement = currentOperandTextElement;
-        this.clear();
+    constructor() {
         this.history = [];
-        this.speechEnabled = false; // Default off
+        this.speechEnabled = false; 
     }
 
     clear() {
-        this.currentOperand = '';
-        this.previousOperand = '';
-        this.operation = undefined;
-        this.fullExpression = ''; 
-        this.resetDisplay = false;
-        this.updateDisplay();
+        mf.setValue('');
+        mf.focus();
     }
 
     delete() {
-        if (this.resetDisplay) {
-            this.currentOperand = '';
-            this.resetDisplay = false;
-            return;
-        }
-        this.currentOperand = this.currentOperand.toString().slice(0, -1);
-        this.updateDisplay();
+        mf.focus();
+        mf.executeCommand('deleteBackward');
     }
 
-    appendNumber(number) {
-        if (this.resetDisplay) {
-            this.currentOperand = number.toString();
-            this.resetDisplay = false;
+    insert(text) {
+        mf.focus(); // Focus BEFORE inserting
+        if(text.includes('#@')) {
+             mf.executeCommand(['insert', text, { selectionMode: 'placeholder' }]);
         } else {
-            if (number === '.' && this.currentOperand.includes('.')) return;
-            this.currentOperand = this.currentOperand.toString() + number.toString();
+             mf.executeCommand(['insert', text]);
         }
-        this.updateDisplay();
-    }
-
-    chooseOperation(operation) {
-        if (this.currentOperand === '' && operation !== '-' && !operation.includes('(')) return;
-
-        if (this.currentOperand !== '') {
-            this.fullExpression += this.currentOperand + ' ' + operation + ' ';
-        } else {
-             this.fullExpression += operation + ' ';
-        }
-        
-        this.previousOperand = this.fullExpression; 
-        this.currentOperand = '';
-        this.updateDisplay();
-    }
-
-    appendFunction(func) {
-        if (this.resetDisplay) {
-            this.fullExpression = '';
-            this.resetDisplay = false;
-        }
-        
-        if (this.currentOperand !== '') {
-            this.fullExpression += this.currentOperand + ' * ' + func;
-        } else {
-            this.fullExpression += func;
-        }
-        
-        this.currentOperand = ''; 
-        this.previousOperand = this.fullExpression;
-        this.updateDisplay();
-    }
-    
-    appendOperator(op) {
-        if (this.resetDisplay) {
-            this.fullExpression = this.currentOperand; 
-            this.resetDisplay = false;
-        }
-
-        if (this.currentOperand !== '') {
-            this.fullExpression += this.currentOperand;
-        }
-        
-        this.fullExpression += ` ${op} `;
-        this.currentOperand = '';
-        this.previousOperand = this.fullExpression;
-        this.updateDisplay();
     }
 
     async compute() {
-        let expressionToSend = this.fullExpression + this.currentOperand;
-        if (!expressionToSend.trim()) return;
+        // Get ASCII-Math or Text representation for backend
+        // MathLive exports LaTeX by default, but mathjs needs clean text.
+        // We can ask MathLive for "ascii-math" which is closer.
+        let expression = mf.getValue('ascii-math');
+        
+        // Clean up ascii-math for mathjs
+        // MathLive might output `sin(30)` or `(1)/(2)`
+        // Mathjs handles most, but we might need tweaks.
+        
+        // Fallback: If ascii-math is weird, we try converting latex on backend? 
+        // Let's rely on backend clean up for now, but do basic fixes.
+        
+        if (!expression.trim()) return;
+        
+        // Replace visual times/div in case
+        expression = expression.replace(/\\times/g, '*').replace(/\\div/g, '/');
 
         try {
             const response = await fetch('/api/calculate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ expression: expressionToSend })
+                body: JSON.stringify({ expression: expression })
             });
 
             const data = await response.json();
 
             if (data.error) {
-                this.currentOperand = 'Error';
-                this.resetDisplay = true;
-                this.fullExpression = '';
+                // Shake or show error?
+                console.error(data.error);
+                // Maybe flash the field red?
+                mf.style.boxShadow = "0 0 0 2px red";
+                setTimeout(() => mf.style.boxShadow = "", 500);
             } else {
-                this.addToHistory(expressionToSend, data.result);
-                this.currentOperand = data.result;
-                this.previousOperand = '';
-                this.fullExpression = ''; 
-                this.resetDisplay = true;
+                this.addToHistory(expression, data.result);
+                // Update display with result? Or keep expression and show result elsewhere?
+                // Standard calc: Replace with result.
+                mf.setValue(data.result.toString());
                 this.speakResult(data.result);
             }
         } catch (err) {
             console.error(err);
-            this.currentOperand = 'Error';
         }
-        this.updateDisplay();
     }
     
     speakResult(text) {
         if (!this.speechEnabled) return;
         const utterance = new SpeechSynthesisUtterance(text);
         window.speechSynthesis.speak(utterance);
-    }
-
-    getDisplayNumber(number) {
-        if (number === 'Error') return 'Error';
-        const stringNumber = number.toString();
-        if (stringNumber.length > 12) return parseFloat(stringNumber).toPrecision(10);
-        
-        const integerDigits = parseFloat(stringNumber.split('.')[0]);
-        const decimalDigits = stringNumber.split('.')[1];
-        let integerDisplay;
-        if (isNaN(integerDigits)) {
-            integerDisplay = '';
-        } else {
-            integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
-        }
-        if (decimalDigits != null) {
-            return `${integerDisplay}.${decimalDigits}`;
-        } else {
-            return integerDisplay;
-        }
-    }
-
-    updateDisplay() {
-        this.currentOperandTextElement.innerText = this.getDisplayNumber(this.currentOperand) || '0';
-        this.previousOperandTextElement.innerText = this.fullExpression || '';
     }
 
     addToHistory(expression, result) {
@@ -170,8 +108,7 @@ class Calculator {
                 <div class="history-result">${item.result}</div>
             `;
             el.onclick = () => {
-                this.currentOperand = item.result;
-                this.updateDisplay();
+                mf.setValue(item.result.toString());
             };
             historyList.appendChild(el);
         });
@@ -183,51 +120,36 @@ class Calculator {
     }
 }
 
-// --- DOM ELEMENTS ---
-const previousOperandTextElement = document.querySelector('[data-previous-operand]');
-const currentOperandTextElement = document.querySelector('[data-current-operand]');
-const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
+const calculator = new Calculator();
 
-// --- EVENT LISTENERS ---
+// --- Event Listeners ---
+
+// Handle clicks on buttons with 'data-insert'
+document.querySelectorAll('[data-insert]').forEach(button => {
+    button.addEventListener('click', () => {
+        const text = button.getAttribute('data-insert');
+        calculator.insert(text);
+    });
+});
+
+// Numbers
 document.querySelectorAll('[data-number]').forEach(button => {
     button.addEventListener('click', () => {
-        calculator.appendNumber(button.innerText);
+        calculator.insert(button.innerText);
     });
 });
-document.querySelectorAll('[data-operation]').forEach(button => {
-    button.addEventListener('click', () => {
-        const op = button.getAttribute('data-operation');
-        if(['+', '-', '*', '/', '^'].includes(op)) {
-             calculator.appendOperator(op);
-        } else if (['sin()', 'cos()', 'tan()', 'sqrt()'].includes(op)) {
-             calculator.appendFunction(op.replace('()', '(')); 
-        } else {
-            calculator.appendOperator(op);
-        }
-    });
-});
+
 document.querySelector('[data-equals]').addEventListener('click', () => calculator.compute());
 document.querySelector('[data-all-clear]').addEventListener('click', () => calculator.clear());
 document.querySelector('[data-delete]').addEventListener('click', () => calculator.delete());
 
 // Keyboard
-document.addEventListener('keydown', (e) => {
-    if ((e.key >= 0 && e.key <= 9) || e.key === '.') {
-        calculator.appendNumber(e.key);
-    }
-    if (['+', '-', '*', '/', '^', '(', ')'].includes(e.key)) {
-        calculator.appendOperator(e.key);
-    }
-    if (e.key === 'Enter' || e.key === '=') {
+mf.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
         e.preventDefault();
         calculator.compute();
     }
-    if (e.key === 'Backspace') {
-        calculator.delete();
-    }
-    if (e.key === 'Escape') {
-        calculator.clear();
-    }
+    // MathLive handles navigation and typing natively
 });
 
 // --- Tab Switching ---
@@ -241,7 +163,8 @@ tabs.forEach(tab => {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
-        viewCalc.style.display = 'none';
+        viewCalc.style.display = 'none'; // Flex vs None
+        viewCalc.classList.remove('active');
         viewGraph.classList.remove('active');
         viewCurrency.classList.remove('active');
 
@@ -252,7 +175,8 @@ tabs.forEach(tab => {
             viewCurrency.classList.add('active');
             initCurrency();
         } else {
-            viewCalc.style.display = 'block';
+            viewCalc.style.display = 'flex';
+            viewCalc.classList.add('active');
         }
     });
 });
@@ -273,7 +197,6 @@ document.getElementById('clear-history').addEventListener('click', () => {
 const voiceBtn = document.getElementById('voice-btn');
 const speakToggle = document.getElementById('speak-toggle');
 
-// TTS Toggle
 speakToggle.addEventListener('click', () => {
     calculator.speechEnabled = !calculator.speechEnabled;
     speakToggle.classList.toggle('speaking');
@@ -304,15 +227,8 @@ if ('webkitSpeechRecognition' in window) {
 }
 
 function processVoiceInput(text) {
-    let processed = text.toLowerCase();
-    processed = processed.replace(/plus/g, '+').replace(/minus/g, '-').replace(/times/g, '*').replace(/divided by/g, '/');
-    const wordsToNum = { 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'zero': 0 };
-    for (const [word, num] of Object.entries(wordsToNum)) {
-        processed = processed.replace(new RegExp(`\\b${word}\\b`, 'g'), num);
-    }
-    calculator.fullExpression = processed;
-    calculator.currentOperand = '';
-    calculator.compute();
+    calculator.insert(text); // Just insert text, MathLive might interpret it
+    // Or parse logically
 }
 
 // --- Graphing Logic ---
@@ -386,20 +302,18 @@ document.getElementById('plot-btn').addEventListener('click', async () => {
 let exchangeRates = {};
 
 async function initCurrency() {
-    if (Object.keys(exchangeRates).length > 0) return; // Already loaded
+    if (Object.keys(exchangeRates).length > 0) return; 
 
     try {
         const res = await fetch('https://api.frankfurter.app/latest?from=USD');
         const data = await res.json();
         exchangeRates = data.rates;
-        exchangeRates['USD'] = 1; // Base
+        exchangeRates['USD'] = 1; 
         
-        // Populate Selects
         const currencies = Object.keys(exchangeRates).sort();
         const fromSel = document.getElementById('curr-from');
         const toSel = document.getElementById('curr-to');
         
-        // Clear existing options first to be safe, though HTML has some defaults
         fromSel.innerHTML = '';
         toSel.innerHTML = '';
 
@@ -417,11 +331,10 @@ async function initCurrency() {
             toSel.appendChild(opt2);
         });
 
-        // Add Listeners for live update
         document.getElementById('curr-amount').addEventListener('input', convertCurrency);
-        fromSel.addEventListener('change', updateBaseRate); // Need to re-fetch if base changes? No, use cross-calc
+        fromSel.addEventListener('change', updateBaseRate); 
         toSel.addEventListener('change', convertCurrency);
-        convertCurrency(); // Initial
+        convertCurrency(); 
         
     } catch(e) {
         console.error("Currency fetch failed", e);
@@ -430,10 +343,6 @@ async function initCurrency() {
 }
 
 async function updateBaseRate() {
-     // Frankfurter free API only supports EUR as base for historical, but latest supports conversion?
-     // Actually frankfurter base is EUR by default but we requested ?from=USD. 
-     // For simplicity, we can fetch new rates when 'from' changes OR do math locally if we had all pairs. 
-     // Simplest: just Re-fetch with new base.
      const newBase = document.getElementById('curr-from').value;
      try {
          const res = await fetch(`https://api.frankfurter.app/latest?from=${newBase}`);
@@ -449,9 +358,6 @@ function convertCurrency() {
     const from = document.getElementById('curr-from').value;
     const to = document.getElementById('curr-to').value;
     
-    // logic: fetch was based on 'from' so exchangeRates[to] is the rate.
-    // If we re-fetched on change, exchangeRates is correct.
-    
     if (exchangeRates[to]) {
         const rate = exchangeRates[to];
         const result = (amount * rate).toFixed(2);
@@ -461,11 +367,3 @@ function convertCurrency() {
 }
 
 document.getElementById('convert-btn').addEventListener('click', convertCurrency);
-document.getElementById('swap-curr').addEventListener('click', () => {
-    const from = document.getElementById('curr-from');
-    const to = document.getElementById('curr-to');
-    const temp = from.value;
-    from.value = to.value;
-    to.value = temp;
-    updateBaseRate(); // fetch new rates
-});

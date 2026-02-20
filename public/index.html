@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <!-- MathLive SDK -->
+    <script defer src="//unpkg.com/mathlive"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
@@ -17,10 +19,10 @@
         <div class="shape shape-2"></div>
     </div>
 
-    <!-- Main App Container (Max Width 500px, Centered) -->
+    <!-- Main App Container -->
     <div class="app-container">
         
-        <!-- Header / Action Bar -->
+        <!-- Header -->
         <header class="app-header">
             <div class="app-title">Aether</div>
             <div class="action-bar">
@@ -36,7 +38,7 @@
             </div>
         </header>
 
-        <!-- Mode Dock (Tabs) -->
+        <!-- Mode Dock -->
         <div class="mode-dock">
             <button class="tab-btn active" data-tab="calc">
                 <ion-icon name="calculator-outline"></ion-icon> Calculator
@@ -54,46 +56,54 @@
             
             <!-- VIEW: CALCULATOR -->
             <div id="view-calc" class="view-panel active" style="background: transparent; box-shadow: none; padding: 0; display: flex; flex-direction: column;">
-                <div class="display">
-                    <div class="previous-operand" data-previous-operand></div>
-                    <div class="current-operand" data-current-operand>0</div>
-                </div>
+                
+                <!-- NEW: MathLive Field -->
+                <math-field id="math-display" virtual-keyboard-mode="manual">
+                    <!-- Default content empty -->
+                </math-field>
+
                 <div class="buttons-grid">
-                    <!-- Row 1: Sci Functions -->
-                    <button class="function-science" data-operation="sin()">sin</button>
-                    <button class="function-science" data-operation="cos()">cos</button>
-                    <button class="function-science" data-operation="tan()">tan</button>
-                    <button class="function-science" data-operation="sqrt()">√</button>
-        
-                    <!-- Row 2: Sci Functions + AC -->
-                    <button class="function-science" data-operation="^">^</button>
-                    <button class="function-science" data-operation="(">(</button>
-                    <button class="function-science" data-operation=")">)</button>
+                    <!-- Nav & Edit Row -->
+                    <button class="function" onclick="execCmd('moveToPreviousChar')"><ion-icon name="arrow-back-outline"></ion-icon></button>
+                    <button class="function" onclick="execCmd('moveToNextChar')"><ion-icon name="arrow-forward-outline"></ion-icon></button>
+                    <button class="function" data-insert="\frac{#@}{#?}"><ion-icon name="pause-outline" style="transform: rotate(90deg)"></ion-icon></button> <!-- Fraction -->
                     <button class="function" data-all-clear>AC</button>
+
+                    <!-- Row 1: Sci Functions -->
+                    <button class="function-science" data-insert="\sin">sin</button>
+                    <button class="function-science" data-insert="\cos">cos</button>
+                    <button class="function-science" data-insert="\tan">tan</button>
+                    <button class="function-science" data-insert="\sqrt">√</button>
+        
+                    <!-- Row 2: Sci Functions -->
+                    <button class="function-science" data-insert="^">^</button>
+                    <button class="function-science" data-insert="(">(</button>
+                    <button class="function-science" data-insert=")">)</button>
+                    <button class="function-science" data-insert="\pi">π</button>
                     
                     <!-- Row 3: 7-9 + Divide -->
                     <button data-number>7</button>
                     <button data-number>8</button>
                     <button data-number>9</button>
-                    <button class="operator" data-operation="/">÷</button>
+                    <button class="operator" data-insert="/">÷</button>
                     
                     <!-- Row 4: 4-6 + Multiply -->
                     <button data-number>4</button>
                     <button data-number>5</button>
                     <button data-number>6</button>
-                    <button class="operator" data-operation="*">×</button>
+                    <button class="operator" data-insert="\times">×</button>
                     
                     <!-- Row 5: 1-3 + Subtract -->
                     <button data-number>1</button>
                     <button data-number>2</button>
                     <button data-number>3</button>
-                    <button class="operator" data-operation="-">-</button>
+                    <button class="operator" data-insert="-">-</button>
                     
                     <!-- Row 6: 0, Dot, DEL, Add -->
                     <button data-number>0</button>
                     <button data-number>.</button>
                     <button class="function" data-delete>DEL</button>
-                    <button class="operator" data-operation="+">+</button>
+                    <button class="operator" data-insert="+">+</button>
         
                     <!-- Row 7: Equals -->
                     <button class="equals" data-equals>=</button>
@@ -118,21 +128,17 @@
             <div id="view-currency" class="view-panel">
                 <div class="currency-content">
                     <h3 style="margin-bottom: 20px;">Converter</h3>
-                    
                     <div class="input-row">
                         <input type="number" id="curr-amount" value="1">
                         <select id="curr-from"></select>
                     </div>
-
                     <div style="font-size: 1.5rem; margin: 10px 0; color: var(--accent-blue);">
                         <ion-icon name="arrow-down-outline"></ion-icon>
                     </div>
-
                     <div class="input-row">
                         <input type="text" id="curr-result-val" readonly>
                         <select id="curr-to"></select>
                     </div>
-                    
                     <button id="convert-btn" class="equals" style="width: 100%; margin-top: 20px;">Convert</button>
                     <p id="rate-info" style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;"></p>
                 </div>
