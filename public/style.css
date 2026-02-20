@@ -162,7 +162,7 @@ body {
 .buttons-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(7, 1fr); /* Explicit rows to fit */
+    grid-template-rows: repeat(8, 1fr); /* Explicit rows to fit */
     gap: 12px;
     flex-grow: 1; /* Stretch to fill available height */
 }
@@ -307,6 +307,7 @@ math-field {
     outline: none;
     --caret-color: var(--accent-blue);
     --selection-background-color: rgba(59, 130, 246, 0.2);
+    --keyboard-toggle-display: none; /* Hide Toggle */
 }
 
 math-field:focus-within {
@@ -315,6 +316,9 @@ math-field:focus-within {
 }
 
 /* Hide default virtual keyboard toggle if annoying */
+math-field::part(virtual-keyboard-toggle) {
+    display: none !important;
+}
 /* Full Screen Graph Mode */
 .view-panel.fullscreen {
     position: fixed;
